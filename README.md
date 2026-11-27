@@ -1,5 +1,10 @@
 # AgroSmart V5 — Precision Irrigation IoT
 
+[![CI](https://github.com/JamesEhlert/agrosmart-iot/actions/workflows/ci.yml/badge.svg)](https://github.com/JamesEhlert/agrosmart-iot/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live-agrosmart--v5.web.app-2E7D32)](https://agrosmart-v5.web.app/sobre)
+![Tests](https://img.shields.io/badge/web%20tests-271%20passing-2E7D32)
+![License](https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey)
+
 **End-to-end smart irrigation system**: an ESP32 field station, AWS IoT and serverless back end, Firebase, and a React dashboard — built with a security-first mindset.
 
 **Live project page:** https://agrosmart-v5.web.app/sobre · 🇧🇷 [Leia em português](README.pt-BR.md)
@@ -85,6 +90,15 @@ npm ci
 npm test
 npm run build
 ```
+
+## Challenges and lessons learned
+| Problem found | What I learned and changed |
+|---|---|
+| The readings page fired ~500 requests in 20 s and hit rate limits | A React effect depended on a list rebuilt on every render. Memoized it, added a circuit breaker (max 12 queries per 10 s) and a test that reproduces the loop |
+| Two simultaneous confirmations caused write contention in Firestore (HTTP 409) | Added a transaction retry with jittered backoff only for contention errors; 34 later confirmations ran with 0 errors |
+| The air sensor reported 100% humidity indoors for hours | It was condensation, not a fault (confirmed with a heat gun outdoors). The planned sensor-health check will flag only values frozen bit-for-bit, never 100% alone |
+| My owner e-mail was hard-coded in a cloud function | Built the exporter that publishes this repository and blocks personal values and secrets before anything leaves the private repo |
+| Text looked blurry on Windows after self-hosting the font | The variable font had no hinting tables; switched to the hinted static Inter and confirmed on the target machine |
 
 ## How AI was used
 AI assistants generated a large part of the code. I defined the requirements and architecture, reviewed every change, ran the tests on real hardware and cloud resources, audited security, and made the decisions. This repository is published by an automated exporter that blocks secrets and personal data before anything leaves my private repository.
