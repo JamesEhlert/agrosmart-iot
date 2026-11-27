@@ -4,7 +4,7 @@
  * PROJETO: AgroSmart Precision System (AgroSmart Precision IoT V5 — Web)
  * AUTOR: James Rafael Ehlert Reinard
  * DATA DE ATUALIZAÇÃO: 2026-11-27T00:00:00Z (UTC)
- * VERSÃO: v5.48.0
+ * VERSÃO: v5.48.1
  * PROPÓSITO: Autor e contato na página Sobre (pública). Só redes sociais com link direto
  *            (abrem em nova aba com `noopener noreferrer`). E-mail e telefone saíram do site
  *            na 5.48.0: o contato é feito pelo LinkedIn (menos spam e golpes).
@@ -16,6 +16,7 @@ import { Facebook, Github, Instagram, Linkedin, MessageSquare, UserCheck } from 
 
 const SOCIAL: ReadonlyArray<{ name: string; handle: string; url: string; icon: ReactNode; tone: string }> = [
   { name: 'LinkedIn', handle: 'james-ehlert-reinard', url: 'https://www.linkedin.com/in/james-ehlert-reinard/', icon: <Linkedin className="w-4 h-4" />, tone: 'text-[#0A66C2]' },
+  { name: 'Código do projeto', handle: 'JamesEhlert/agrosmart-iot', url: 'https://github.com/JamesEhlert/agrosmart-iot', icon: <Github className="w-4 h-4" />, tone: 'text-brand' },
   { name: 'GitHub', handle: 'JamesEhlert', url: 'https://github.com/JamesEhlert', icon: <Github className="w-4 h-4" />, tone: 'text-ink' },
   { name: 'Instagram', handle: 'james.ehlert', url: 'https://www.instagram.com/james.ehlert/', icon: <Instagram className="w-4 h-4" />, tone: 'text-[#C13584]' },
   { name: 'Facebook', handle: 'jamesehlertreinard', url: 'https://www.facebook.com/jamesehlertreinard', icon: <Facebook className="w-4 h-4" />, tone: 'text-[#1877F2]' },

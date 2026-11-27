@@ -10,7 +10,7 @@ const src = (p: string) => readFileSync(resolve(__dirname, '..', p), 'utf8');
 
 describe('WEB-548 última versão da V5', () => {
   it('WEB-548-01 versão 5.48.0', () => {
-    expect(JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf8')).version).toBe('5.48.0');
+    expect(JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf8')).version).toMatch(/^5\.48\.\d+$/);
   });
   it('WEB-548-02 sem e-mail nem WhatsApp no site', () => {
     const all = src('features/about/AuthorContact.tsx');
@@ -34,5 +34,11 @@ describe('WEB-548 última versão da V5', () => {
   });
   it('WEB-548-07 MOB-05 banner do clima mostra seta no celular', () => {
     expect(src('features/weather/components/WeatherSummaryBanner.tsx')).toContain('sm:hidden w-5 h-5');
+  });
+  it('WEB-5481-01 link do repositório público na Sobre e no contato', () => {
+    const about = src('pages/AboutProjectPage.tsx');
+    expect(about).toContain('href="https://github.com/JamesEhlert/agrosmart-iot"');
+    expect(about).toContain("value: '270'");
+    expect(src('features/about/AuthorContact.tsx')).toContain('https://github.com/JamesEhlert/agrosmart-iot');
   });
 });

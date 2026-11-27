@@ -57,6 +57,7 @@ import {
   Lightbulb,
   Contact,
   MousePointerClick,
+  Github,
 } from 'lucide-react';
 import { FlowLanesDiagram } from '../features/about/FlowLanesDiagram';
 import { CommandTimeline } from '../features/about/CommandTimeline';
@@ -251,7 +252,7 @@ const STACK: ReadonlyArray<{ group: string; items: string[] }> = [
 ];
 
 const TEST_STATS: ReadonlyArray<{ value: string; label: string; text: string }> = [
-  { value: '170+', label: 'testes automáticos do site', text: 'Regras de tela, filtros, CSV, agendas e proteções, rodados a cada versão.' },
+  { value: '270', label: 'testes automáticos do site', text: 'Regras de tela, filtros, CSV, agendas e proteções, rodados a cada versão.' },
   { value: '51', label: 'testes das regras do banco', text: 'Titular, convidado, intruso e anônimo, no emulador do Firestore, antes de publicar.' },
   { value: '12/12', label: 'testes de injeção MQTT', text: 'Comandos forjados, repetidos e acima do limite: todos tratados como esperado.' },
   { value: '0', label: 'leituras perdidas', text: 'Internet desligada por 7 minutos: a fila no cartão SD reenviou tudo, sem duplicar.' },
@@ -270,6 +271,8 @@ const MILESTONES: ReadonlyArray<{ title: string; text: string }> = [
   { title: 'Site profissional', text: 'Auditoria com filtros e exclusão segura, agendamentos inteligentes, histórico com CSV, explicações e diagramas.' },
   { title: 'Controles na estação', text: 'Botões físicos de irrigação e display, com eventos rastreáveis confirmados pela nuvem, e página pública de apresentação.' },
   { title: 'Tema escuro e notificações', text: 'Tema claro, escuro ou automático e central de avisos: estação offline, sensores, chuva prevista, regas puladas, firmware novo e falhas.' },
+  { title: 'Site rápido, acessível e no celular', text: 'Design system com tema claro e escuro, páginas sob demanda com orçamento de peso, janelas acessíveis, atalhos de teclado e versão para celular.' },
+  { title: 'Código público com publicação segura', text: 'Repositório no GitHub gerado por um exportador que barra segredos e dados pessoais antes de qualquer arquivo sair do repositório privado.' },
 ];
 
 const ROADMAP: ReadonlyArray<{ title: string; icon: ReactNode; tone: string; items: string[] }> = [
@@ -277,19 +280,19 @@ const ROADMAP: ReadonlyArray<{ title: string; icon: ReactNode; tone: string; ite
     title: 'Agora',
     icon: <Hourglass className="w-4 h-4 text-brand" />,
     tone: 'border-[#A5D6A7] bg-brand-tint/50',
-    items: ['Firmware com recuperação automática de falhas', 'Proteção anti-robô obrigatória (App Check)', 'Aplicativo instalável no celular (PWA)'],
+    items: ['Instalação da estação no jardim', 'Testes automáticos a cada envio ao GitHub (CI)', 'Diagramas e decisões de arquitetura no repositório público'],
   },
   {
     title: 'Próximo',
     icon: <Rocket className="w-4 h-4 text-info" />,
     tone: 'border-info-soft bg-info-tint/50',
-    items: ['Gráficos de meses e anos com resumos por hora e por dia', 'Instalação no jardim, com envio a cada 15–30 minutos', 'Testes automáticos a cada envio ao GitHub (CI)'],
+    items: ['Firmware com recuperação automática de falhas', 'Proteção anti-robô obrigatória (App Check)', 'Gráficos de meses e anos com resumos por hora e por dia'],
   },
   {
     title: 'Futuro',
     icon: <Telescope className="w-4 h-4 text-[#7B1FA2]" />,
     tone: 'border-[#E1BEE7] bg-[#F3E5F5]/50',
-    items: ['Engenharia de dados em camadas (bronze, prata e ouro)', 'Indicadores de água economizada e regas evitadas', 'Várias zonas de irrigação e mais estações'],
+    items: ['Versão 6: nova arquitetura com mais autonomia local', 'Engenharia de dados em camadas (bronze, prata e ouro) e painéis de BI', 'Indicadores de água economizada e regas evitadas'],
   },
 ];
 
@@ -320,6 +323,16 @@ export function AboutProjectPage() {
               </span>
             ))}
           </div>
+          <a
+            href="https://github.com/JamesEhlert/agrosmart-iot"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="repo-link"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-brand-strong text-sm font-extrabold shadow-sm hover:bg-white/90 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
+          >
+            <Github className="w-4 h-4" aria-hidden="true" />
+            Ver o código no GitHub
+          </a>
         </div>
         <nav className="bg-surface px-4 py-3 flex gap-2 overflow-x-auto" aria-label="Seções da página">
           {SECTIONS.map((s) => (
