@@ -11,6 +11,15 @@
 
 > Academic and portfolio project (started as my Systems Analysis and Development capstone). Not affiliated with the company Agrosmart.
 
+## Screenshots
+| Dashboard (desktop) | Operation audit (desktop) |
+|---|---|
+| ![Real-time dashboard with sensors, weather, irrigation control and station health](docs/images/desktop-monitor.png) | ![Audit of one irrigation command: timeline from request to the station's confirmation](docs/images/desktop-audit.png) |
+
+| Mobile dashboard | Mobile audit: physical button refused by a safety rule |
+|---|---|
+| <img src="docs/images/mobile-monitor.png" alt="Mobile dashboard with sensors in two columns and bottom navigation" width="300"> | <img src="docs/images/mobile-audit.png" alt="Mobile audit sheet showing a refused button press and its timeline" width="300"> |
+
 ## What it does
 - Monitors air temperature, air humidity, soil moisture, light, UV and rain in real time.
 - Opens and closes an irrigation valve from the web, from weekly schedules, or from physical buttons on the station.
