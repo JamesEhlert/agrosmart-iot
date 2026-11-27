@@ -42,6 +42,13 @@ flowchart LR
   HOST --> WEB
 ```
 
+## Documentation
+| Document | What you will find |
+|---|---|
+| [Architecture](docs/architecture.md) | Components and sequence diagrams: manual command with ACK, offline telemetry queue, signed OTA |
+| [Security overview](docs/security.md) | STRIDE threat model, physical safety, firmware integrity and the tests behind each claim |
+| [Decision records](docs/adr/) | Why mutual TLS per station, idempotent commands, two clouds, signed OTA without Secure Boot, and an exported public repo |
+
 ## Engineering highlights
 | Area | What was done |
 |---|---|
@@ -51,7 +58,7 @@ flowchart LR
 | Firmware updates | OTA images are signed (ECDSA P-256) and verified before download and before flashing, with automatic rollback |
 | Access control | Device ownership checked on the server for every route (no IDOR); Firestore rules tested with 51 emulator tests; guest passes expire and can be revoked |
 | Device identity | One X.509 certificate per station, MQTT over mutual TLS, per-thing policies |
-| Web app | React + TypeScript, lazy-loaded pages with a size budget, dark mode, accessible dialogs, keyboard shortcuts, mobile layout, 270 automated tests |
+| Web app | React + TypeScript, lazy-loaded pages with a size budget, dark mode, accessible dialogs, keyboard shortcuts, mobile layout, 271 automated tests |
 
 ## Measured results
 | Metric | Value |
