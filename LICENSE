@@ -1,0 +1,10 @@
+Copyright (c) 2026 James Rafael Ehlert Reinard. All rights reserved.
+
+This repository is published for evaluation and portfolio purposes only.
+You may view and read the source code on GitHub. No permission is granted to
+copy, modify, distribute, sublicense, or use this code or any part of it,
+commercially or otherwise, without prior written permission from the author.
+
+Third-party components keep their own licenses (for example, the Inter font is
+licensed under the SIL Open Font License 1.1, and npm/PlatformIO dependencies
+under their respective licenses).

@@ -1,0 +1,361 @@
+// =====================================================================================
+// ARQUIVO: firestore.rules (Cloud Firestore Security Rules)
+// PROJETO: AgroSmart Precision System (AgroSmart Precision IoT V5)
+// RESPONSAVEL PELA ALTERACAO: Revisao de Seguranca (Fase 3D — Verificacao final de robustez)
+// ULTIMA ATUALIZACAO: 2026-11-24T09:00:00Z (UTC)
+// VERSAO: v5.32.0 (Titular exclui logs do historico; alertas de seguranca protegidos 30 dias)
+// =====================================================================================
+// CHANGELOG v5.32.0 (web 5.36.0 — pagina Logs & Auditoria):
+// - HISTORY: o TITULAR pode EXCLUIR registros da linha do tempo (`history`). Ninguem cria
+//   nem edita pelo cliente (continua so a Lambda). A Demo continua so lendo.
+// - Alerta de seguranca (`type == security_alert`, `source == unregistered` ou
+//   `event_code == CMD_UNREGISTERED`) com menos de 30 dias (ou sem data) NAO pode ser
+//   excluido: se a conta do titular for usada indevidamente, a prova da intrusao fica.
+// - `commands`, `ack_events` e demais caminhos: inalterados (exclusao continua negada).
+// =====================================================================================
+// CHANGELOG v5.31.0 (Fase 3D):
+// - COMMANDS: a Demo so faz `get` de comando que tenha `requested_action` on/off E
+//   `requested_by.user_id` igual ao proprio UID. Antes, documentos SEM `requested_action`
+//   (ex.: ACK de comando nao registrado criado pela AckToFirestore) e comandos do
+//   titular tambem eram legiveis pela Demo.
+// - Regras cobertas por testes automatizados no emulador (tests/firestore.rules.test.mjs).
+// =====================================================================================
+// CHANGELOG v5.30.0:
+// - Demo so cria agendas nos IDs fixos `demo-<demo_sid>-0` .. `demo-<demo_sid>-4`
+//   (no maximo 5 agendas simultaneas por sessao; nao ha como criar uma sexta).
+// - Demo: `duration_minutes` <= 5 na criacao e na edicao (titular continua ate 15).
+// - Demo pode excluir apenas as proprias agendas da sessao ativa (libera vaga).
+// - Titular: comportamento inalterado.
+// =====================================================================================
+// CHANGELOG v5.29.1:
+// - Bloco 3: Remove permissão `list` da sessão Demo em `devices/{deviceId}/commands`
+//   (impede enumeração da subcoleção) e restringe `get` da Demo apenas a comandos
+//   `on`/`off`, bloqueando acesso a documentos `ota` (`s3_key`/`sha256`) e `config`.
+// =====================================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // Identifica exclusivamente o Operador Titular com e-mail verificado
+    function isTrustedOwnerAccount() {
+      return signedIn()
+        && !isDemoToken()
+        && ('email' in request.auth.token)
+        && request.auth.token.email != null
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() == '__OWNER_EMAIL__'
+        && ('email_verified' in request.auth.token)
+        && request.auth.token.email_verified == true;
+    }
+
+    // Exige Custom Token Zero-Credential assinado pelo backend com todas as claims obrigatórias
+    function isDemoToken() {
+      return signedIn()
+        && ('is_demo' in request.auth.token)
+        && request.auth.token.is_demo == true
+        && ('demo_sid' in request.auth.token)
+        && request.auth.token.demo_sid is string
+        && request.auth.token.demo_sid.size() >= 10
+        && ('demo_device_id' in request.auth.token)
+        && request.auth.token.demo_device_id is string
+        && request.auth.token.demo_device_id.size() >= 1;
+    }
+
+    // Valida a sessão Demo contra o documento privado gerenciado exclusivamente pelo backend
+    function hasActiveDemoSession(deviceId) {
+      let authPath = /databases/$(database)/documents/devices/$(deviceId)/private/demo_auth;
+      return isDemoToken()
+        && request.auth.token.demo_device_id == deviceId
+        && exists(authPath)
+        && get(authPath).data.pass_claimed == true
+        && ('expires_epoch' in get(authPath).data)
+        && get(authPath).data.expires_epoch is int
+        && get(authPath).data.expires_epoch > (request.time.toMillis() / 1000)
+        && ('session_id' in get(authPath).data)
+        && get(authPath).data.session_id is string
+        && get(authPath).data.session_id.size() >= 10
+        && request.auth.token.demo_sid == get(authPath).data.session_id;
+    }
+
+    function isOwnerByResource() {
+      return isTrustedOwnerAccount()
+        && resource != null
+        && resource.data.owner_uid == uid();
+    }
+
+    function isOwner(deviceId) {
+      let devPath = /databases/$(database)/documents/devices/$(deviceId);
+      return isTrustedOwnerAccount()
+        && exists(devPath)
+        && get(devPath).data.owner_uid == uid();
+    }
+
+    function isOwnerOrActiveDemo(deviceId) {
+      return isOwner(deviceId) || hasActiveDemoSession(deviceId);
+    }
+
+    // v5.32.0: alerta de seguranca com menos de 30 dias (ou sem data valida) nao pode
+    // ser excluido do historico, nem pelo titular.
+    function isSecurityLog(res) {
+      return res.data.get('type', '') == 'security_alert'
+        || res.data.get('source', '') == 'unregistered'
+        || res.data.get('event_code', '') == 'CMD_UNREGISTERED';
+    }
+
+    function isProtectedSecurityLog(res) {
+      return isSecurityLog(res)
+        && !(res.data.get('timestamp', null) is timestamp
+             && res.data.timestamp < request.time - duration.value(30, 'd'));
+    }
+
+    // Valida tipos e faixas físicas dos parâmetros operacionais dentro de `settings`
+    function areAllowedSettingsFieldsValid(s) {
+      return s is map
+        && (!('device_name' in s) || (s.device_name is string && s.device_name.size() >= 1 && s.device_name.size() <= 60))
+        && (!('target_soil_moisture' in s) || (s.target_soil_moisture is number && s.target_soil_moisture >= 0 && s.target_soil_moisture <= 100))
+        && (!('manual_valve_duration' in s) || (s.manual_valve_duration is int && s.manual_valve_duration >= 1 && s.manual_valve_duration <= 15))
+        && (!('timezone_offset' in s) || (s.timezone_offset is int && s.timezone_offset >= -12 && s.timezone_offset <= 14))
+        && (!('enable_weather_control' in s) || s.enable_weather_control is bool)
+        && (!('latitude' in s) || (s.latitude is number && s.latitude >= -90 && s.latitude <= 90))
+        && (!('longitude' in s) || (s.longitude is number && s.longitude >= -180 && s.longitude <= 180))
+        && (!('capabilities' in s) || (s.capabilities is list && s.capabilities.size() >= 1 && s.capabilities.size() <= 5 && s.capabilities.hasOnly(['air', 'soil', 'light', 'rain', 'uv'])))
+        && (!('telemetry_interval_ms' in s) || (s.telemetry_interval_ms is int && s.telemetry_interval_ms >= 10000 && s.telemetry_interval_ms <= 3600000))
+        && (!('soil_raw_dry' in s) || (s.soil_raw_dry is int && s.soil_raw_dry >= 100 && s.soil_raw_dry <= 4080))
+        && (!('soil_raw_wet' in s) || (s.soil_raw_wet is int && s.soil_raw_wet >= 100 && s.soil_raw_wet <= 4080))
+        && (!('soil_raw_dry' in s && 'soil_raw_wet' in s) || (s.soil_raw_dry - s.soil_raw_wet) >= 100);
+    }
+
+    function isValidSettingsCreate(s) {
+      return s is map
+        && s.keys().hasOnly([
+          'device_name',
+          'target_soil_moisture',
+          'manual_valve_duration',
+          'timezone_offset',
+          'enable_weather_control',
+          'latitude',
+          'longitude',
+          'capabilities',
+          'telemetry_interval_ms',
+          'soil_raw_dry',
+          'soil_raw_wet'
+        ])
+        && areAllowedSettingsFieldsValid(s);
+    }
+
+    function isValidSettingsUpdate(newS, oldS) {
+      return newS is map
+        && (
+          (oldS is map && newS.diff(oldS).affectedKeys().hasOnly([
+            'device_name',
+            'target_soil_moisture',
+            'manual_valve_duration',
+            'timezone_offset',
+            'enable_weather_control',
+            'latitude',
+            'longitude',
+            'capabilities',
+            'telemetry_interval_ms',
+            'soil_raw_dry',
+            'soil_raw_wet'
+          ]))
+          || (!(oldS is map) && isValidSettingsCreate(newS))
+        )
+        && areAllowedSettingsFieldsValid(newS);
+    }
+
+    // Fase 1B: limites de agendas da sessao Demo
+    function demoScheduleSlotIds() {
+      return [
+        'demo-' + request.auth.token.demo_sid + '-0',
+        'demo-' + request.auth.token.demo_sid + '-1',
+        'demo-' + request.auth.token.demo_sid + '-2',
+        'demo-' + request.auth.token.demo_sid + '-3',
+        'demo-' + request.auth.token.demo_sid + '-4'
+      ];
+    }
+
+    function isDemoScheduleDurationOk(data) {
+      return data.duration_minutes is int && data.duration_minutes <= 5;
+    }
+
+    function isOwnDemoSchedule(res) {
+      return 'created_by_demo' in res.data
+        && res.data.created_by_demo == true
+        && 'demo_session_id' in res.data
+        && res.data.demo_session_id == request.auth.token.demo_sid;
+    }
+
+    // Valida payload de agendamento com checagem estrita de `days` (1..7) e vínculo de sessão Demo
+    function isValidSchedulePayload(data) {
+      return data.keys().hasAll(['label', 'time', 'days', 'duration_minutes', 'enabled'])
+        && data.keys().hasOnly(['label', 'time', 'days', 'duration_minutes', 'enabled', 'created_by_demo', 'demo_session_id'])
+        && data.label is string
+        && data.label.size() >= 1
+        && data.label.size() <= 80
+        && data.time is string
+        && data.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && data.days is list
+        && data.days.size() >= 1
+        && data.days.size() <= 7
+        && data.days.hasOnly([1, 2, 3, 4, 5, 6, 7])
+        && data.duration_minutes is int
+        && data.duration_minutes >= 1
+        && data.duration_minutes <= 15
+        && data.enabled is bool
+        && (!('created_by_demo' in data) || data.created_by_demo is bool)
+        && (!('demo_session_id' in data) || (data.demo_session_id is string && data.demo_session_id.size() <= 64))
+        && (
+          !isDemoToken()
+          || (
+            ('created_by_demo' in data && data.created_by_demo == true)
+            && ('demo_session_id' in data && data.demo_session_id == request.auth.token.demo_sid)
+          )
+        );
+    }
+
+    // -------------------------
+    // USERS (Operador Titular ou Demo com Custom Token assinado)
+    // -------------------------
+    match /users/{userId} {
+      allow read: if signedIn()
+        && userId == uid()
+        && (isTrustedOwnerAccount() || isDemoToken());
+
+      allow create: if isTrustedOwnerAccount()
+        && userId == uid()
+        && request.resource.data.uid == uid()
+        && (!('role' in request.resource.data) || request.resource.data.role == 'customer');
+
+      allow update: if isTrustedOwnerAccount()
+        && userId == uid()
+        && request.resource.data.uid == uid()
+        && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+
+      allow delete: if false;
+    }
+
+    // -------------------------
+    // DEVICES (Documento mestre EXCLUSIVO do Operador Titular)
+    // -------------------------
+    match /devices/{deviceId} {
+      allow read: if isOwnerByResource();
+
+      allow create: if isTrustedOwnerAccount()
+        && request.resource.data.owner_uid == uid()
+        && request.resource.data.device_id == deviceId
+        && request.resource.data.keys().hasOnly(['device_id', 'owner_uid', 'settings', 'created_at'])
+        && isValidSettingsCreate(request.resource.data.settings);
+
+      allow update: if isOwnerByResource()
+        && request.resource.data.owner_uid == resource.data.owner_uid
+        && (!('device_id' in request.resource.data) || request.resource.data.device_id == deviceId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings', 'device_id'])
+        && (
+          !('settings' in request.resource.data)
+          || isValidSettingsUpdate(request.resource.data.settings, resource.data.settings)
+        );
+
+      allow delete: if false;
+
+      // -------------------------
+      // PRIVATE (100% Backend-Only: demo_auth, hashes, contadores)
+      // -------------------------
+      match /private/{docId} {
+        allow read, write: if false;
+      }
+
+      // -------------------------
+      // DEMO_VIEW (Projeção sanitizada de leitura para Demo ativa)
+      // -------------------------
+      match /demo_view/{viewId} {
+        allow read: if viewId == 'current' && isOwnerOrActiveDemo(deviceId);
+        allow write: if false;
+      }
+
+      // -------------------------
+      // SCHEDULES (Isolamento por demo_session_id + limite de 5 agendas Demo de ate 5 min)
+      // -------------------------
+      match /schedules/{scheduleId} {
+        allow read: if isOwnerOrActiveDemo(deviceId);
+        allow create: if isValidSchedulePayload(request.resource.data)
+          && (
+            isOwner(deviceId)
+            || (
+              hasActiveDemoSession(deviceId)
+              && scheduleId in demoScheduleSlotIds()
+              && isDemoScheduleDurationOk(request.resource.data)
+            )
+          );
+        allow update: if isOwnerOrActiveDemo(deviceId)
+          && (
+            (
+              isValidSchedulePayload(request.resource.data)
+              && (
+                !isDemoToken()
+                || (
+                  isOwnDemoSchedule(resource)
+                  && request.resource.data.demo_session_id == resource.data.demo_session_id
+                  && isDemoScheduleDurationOk(request.resource.data)
+                )
+              )
+            )
+            || (
+              !isDemoToken()
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enabled', 'created_by_demo', 'demo_session_id'])
+              && request.resource.data.enabled is bool
+              && (!('created_by_demo' in request.resource.data) || request.resource.data.created_by_demo is bool)
+              && (!('demo_session_id' in request.resource.data) || request.resource.data.demo_session_id is string)
+            )
+            || (
+              isDemoToken()
+              && isOwnDemoSchedule(resource)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enabled'])
+              && request.resource.data.enabled is bool
+            )
+          );
+
+        allow delete: if isOwner(deviceId)
+          || (hasActiveDemoSession(deviceId) && isOwnDemoSchedule(resource));
+      }
+
+      // -------------------------
+      // COMMANDS (Titular: get/list; Demo: apenas get pontual dos PROPRIOS on/off, sem list/ota/config)
+      // -------------------------
+      match /commands/{commandId} {
+        allow get, list: if isOwner(deviceId);
+        allow get: if hasActiveDemoSession(deviceId)
+          && resource != null
+          && ('requested_action' in resource.data)
+          && resource.data.requested_action in ['on', 'off']
+          && ('requested_by' in resource.data)
+          && resource.data.requested_by is map
+          && resource.data.requested_by.get('user_id', '') == request.auth.uid;
+        allow create, update, delete: if false;
+      }
+
+      // -------------------------
+      // HISTORY (leitura de auditoria; v5.32.0: titular exclui, exceto alerta recente)
+      // -------------------------
+      match /history/{logId} {
+        allow read: if isOwnerOrActiveDemo(deviceId);
+        allow create, update: if false;
+        allow delete: if isOwner(deviceId) && !isProtectedSecurityLog(resource);
+      }
+    }
+
+    // Default: nega tudo que não foi explicitamente permitido
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,78 @@
+/*
+ * tokens.css — v5.44.0 — paleta central do AgroSmart (design tokens).
+ * Cada cor tem um PAPEL (texto, fundo, borda, degradê) e um NOME semântico.
+ * Valores em canais RGB para o Tailwind aplicar transparência (ex.: bg-brand/10).
+ * Mudar uma cor do site = mudar uma linha aqui. Usar nas telas: text-ink, bg-surface,
+ * border-line, from-brand... (mapa em tailwind.config.js). Nunca usar hex solto em telas novas.
+ */
+:root {
+  --tx-ink: 28 37 44;
+  --tx-ink-muted: 96 111 123;
+  --tx-ink-soft: 55 71 79;
+  --tx-brand: 46 125 50;
+  --tx-brand-strong: 27 94 32;
+  --tx-danger: 198 40 40;
+  --tx-warning: 194 65 12;
+  --tx-info: 21 101 192;
+  --tx-info-strong: 13 71 161;
+  --tx-warning-strong: 138 75 0;
+  --bg-surface: 255 255 255;
+  --bg-canvas: 240 244 248;
+  --bg-subtle: 248 250 252;
+  --bg-sunken: 238 242 245;
+  --bg-brand: 46 125 50;
+  --bg-brand-strong: 27 94 32;
+  --bg-brand-soft: 200 230 201;
+  --bg-brand-tint: 232 245 233;
+  --bg-danger: 211 47 47;
+  --bg-info: 25 118 210;
+  --bg-info-strong: 21 101 192;
+  --bg-info-tint: 227 242 253;
+  --bg-danger-strong: 183 28 28;
+  --bg-accent: 0 230 118;
+  --bd-line: 224 230 237;
+  --bd-brand: 46 125 50;
+  --bd-brand-soft: 200 230 201;
+  --bd-danger: 211 47 47;
+  --bd-info: 25 118 210;
+  --bd-info-soft: 187 222 251;
+  --st-brand: 46 125 50;
+  --st-brand-strong: 27 94 32;
+  /* v5.47.0: anel de foco do teclado (contraste >= 3:1 com o fundo) */
+  --focus-ring: 27 94 32;
+}
+.dark {
+  --tx-ink: 230 237 243;
+  --tx-ink-muted: 195 206 216;
+  --tx-ink-soft: 230 237 243;
+  --tx-brand: 151 217 154;
+  --tx-brand-strong: 144 223 150;
+  --tx-danger: 231 136 136;
+  --tx-warning: 241 160 126;
+  --tx-info: 126 180 241;
+  --tx-info-strong: 126 171 241;
+  --tx-warning-strong: 241 189 126;
+  --bg-surface: 22 29 37;
+  --bg-canvas: 13 18 24;
+  --bg-subtle: 26 34 43;
+  --bg-sunken: 34 44 55;
+  --bg-brand: 42 115 46;
+  --bg-brand-strong: 25 86 29;
+  --bg-brand-soft: 35 77 36;
+  --bg-brand-tint: 23 53 25;
+  --bg-danger: 196 41 41;
+  --bg-info: 23 109 193;
+  --bg-info-strong: 19 93 177;
+  --bg-info-tint: 28 37 48;
+  --bg-danger-strong: 168 26 26;
+  --bg-accent: 0 212 109;
+  --bd-line: 38 49 61;
+  --bd-brand: 46 125 50;
+  --bd-brand-soft: 45 98 46;
+  --bd-danger: 171 43 43;
+  --bd-info: 43 107 171;
+  --bd-info-soft: 39 74 104;
+  --st-brand: 42 115 46;
+  --st-brand-strong: 25 86 29;
+  --focus-ring: 129 199 132;
+}

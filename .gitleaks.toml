@@ -1,0 +1,12 @@
+# Configuracao do gitleaks do repositorio publico: regras padrao + 3 valores FALSOS de teste
+# (apps/web/src/test/agrosmart_unit.test.ts confere que o site esconde tokens nos logs).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Dados falsos de teste (revisados em 27/11/2026)"
+regexes = [
+  '''eyJhbGciOiJSUzI1NiJ9\.eyJzdWIiOiIxMjM0NTY3OCJ9\.signature123456''',
+  '''^abcdef0123456789$''',
+  '''^AGRO-7K9M-X4P2$''',
+]

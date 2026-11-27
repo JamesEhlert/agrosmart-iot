@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* v5.45.0: Inter 3.19 ESTÁTICA COM HINTING (instruções que alinham a letra aos pixels).
+   A fonte variável da 5.43 não tinha hinting: no Windows o texto pequeno ficava fino e
+   serrilhado. Um arquivo por peso usado (400–800, ~37 KB cada); o navegador só baixa os
+   pesos que a página usa e guarda por 30 dias. Licença OFL em /fonts/. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-hinted-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-hinted-medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-hinted-semibold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-hinted-bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/inter-hinted-extrabold.woff2') format('woff2');
+}
+
+/* v5.47.0: fonte reserva com as MEDIDAS da Inter (Arial ajustada). Enquanto a Inter baixa,
+   o texto já ocupa o mesmo espaço: quando ela chega, nada "pula" na tela (CLS).
+   Medidas calculadas com fontTools a partir do próprio arquivo da Inter. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans');
+  size-adjust: 108.2%;
+  ascent-override: 89.5%;
+  descent-override: 22.3%;
+  line-gap-override: 0%;
+}
+
+@layer base {
+  /* v5.47.0: foco do teclado visível e com contraste em todo lugar (cor por tema em
+     --focus-ring). :where() não pesa: um anel próprio do componente continua valendo. */
+  :where(a[href], button, summary, [role='button'], [role='tab'], [role='option'], [role='radio'], [role='menuitem'], [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--focus-ring));
+    outline-offset: 2px;
+  }
+  /* v5.42.0: cores dos diagramas SVG (caixas e textos) por tema */
+  :root {
+    --diagram-box: #FFFFFF;
+    --diagram-ink: #1C252C;
+  }
+  .dark {
+    --diagram-box: #161D25;
+    --diagram-ink: #E6EDF3;
+  }
+
+  body {
+    font-family: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    text-rendering: optimizeLegibility;
+    background-color: #F0F4F8;
+    color: #1C252C;
+  }
+
+  /* v5.42.0: tema escuro (classe `dark` na <html>, aplicada por public/theme-init.js e ThemeProvider) */
+  .dark body {
+    background-color: #0D1218;
+    color: #E6EDF3;
+  }
+
+  code, pre, .font-mono {
+    /* v5.45.0: monoespaçada do próprio sistema (Consolas no Windows, SF Mono no Mac/iPhone,
+       Roboto Mono/Droid no Android): nítida, padrão do mercado e sem download. */
+    font-family: ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, 'Roboto Mono', Menlo, monospace;
+    font-variant-ligatures: none;
+  }
+}
+
+/* Barra de rolagem sutil e moderna para tabelas e modais */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #EEF2F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+/* v5.42.0: barra de rolagem e seleção no tema escuro */
+.dark ::-webkit-scrollbar-track {
+  background: #121920;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334150;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4A5868;
+}
+.dark ::selection {
+  background: rgb(76 175 80 / 0.35);
+}
+.dark input,
+.dark select,
+.dark textarea {
+  color-scheme: dark;
+}
+/* Troca de tema suave (sem animar a primeira pintura). */
+.theme-ready body,
+.theme-ready .bg-white {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-ready body,
+  .theme-ready .bg-white {
+    transition: none;
+  }
+}
+
+/* v5.44.0: entrada suave do fundo das janelas (Dialog) */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* v5.45.0: movimento leve (só CSS, sem biblioteca). Tudo some com "reduzir movimento". */
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@keyframes popIn { from { opacity: 0; transform: translateY(4px) scale(0.98) } to { opacity: 1; transform: none } }
+@keyframes sheetUp { from { opacity: 0.4; transform: translateY(32px) } to { opacity: 1; transform: none } }
+@keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+@layer utilities {
+  .anim-page { animation: pageIn 0.26s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .anim-pop { animation: popIn 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .anim-sheet { animation: sheetUp 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .skeleton-shimmer {
+    background-image: linear-gradient(90deg, rgb(var(--bg-sunken)) 0%, rgb(var(--bg-subtle)) 45%, rgb(var(--bg-sunken)) 90%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-page, .anim-pop, .anim-sheet, .skeleton-shimmer { animation: none !important; }
+}
+
+/* =====================================================================================
+   v5.47.0 — o que as IAs costumam esquecer (pesquisa de 26/11; ver backlog WEB-36..44)
+   ===================================================================================== */
+
+/* Campos de texto: muitos usavam "focus:outline-none" e só trocavam a cor de uma borda de
+   1 px (quase invisível). Aqui o anel aparece sempre, com contraste >= 3:1 nos dois temas. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgb(var(--focus-ring)) !important;
+  outline-offset: 1px !important;
+}
+
+/* iPhone: campo com letra menor que 16 px faz o Safari dar zoom na página ao tocar.
+   Em tela de toque, todo campo usa no mínimo 16 px. */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+  /* Área de toque mínima de 44 px para botões só com ícone (dedo, não mouse). */
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* "Reduzir movimento": as animações de enfeite do Tailwind (pulsar, pingar, quicar)
+   também param. O "girando" de carregando continua: ele mostra estado, não é enfeite. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
+  }
+}
+
+/* Celular com janela aberta (folha embaixo): o aviso sobe para o topo e não cobre o
+   formulário. */
+@media (max-width: 639px) {
+  html:has(dialog[open]) [data-toast-stack] {
+    top: calc(0.75rem + env(safe-area-inset-top));
+    bottom: auto;
+  }
+}
+
+/* Janela nativa (<dialog>): o fundo escuro é desenhado pelo próprio Dialog. */
+dialog::backdrop {
+  background: transparent;
+}
+
+/* Rolagem horizontal (chips, abas) não dispara o "voltar" do navegador por engano. */
+.scroll-x-contained {
+  overscroll-behavior-x: contain;
+}
